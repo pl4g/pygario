@@ -33,17 +33,17 @@ class Bot(Player):
         "SaturnCSS",
     ]
 
-    def __init__(self,platform_size, *groups) -> None:
-        super().__init__(platform_size,choice(self.NAMES), *groups)
-        
+    def __init__(self, platform_size, *groups) -> None:
+        super().__init__(platform_size, choice(self.NAMES), *groups)
+
         self.direction = Vector2(uniform(-1, 1), uniform(-1, 1))
 
-    def move(self):
+    def move(self, camera):
         self.x += self.direction.x * self.speed
         self.y += self.direction.y * self.speed
 
-    def update(self) -> None:
-        if random() < .02:
+    def update(self, camera) -> None:
+        if random() < 0.02:
             self.direction = Vector2(uniform(-1, 1), uniform(-1, 1))
 
-        super().update()
+        super().update(camera)

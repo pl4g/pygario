@@ -1,55 +1,33 @@
+import argparse
+import sys
 import pygame
-from src.camera import Camera
-from src.grid import Grid
-from src.player import Player
-from src.food import Food
-from src.hud import Hud
-from src.bot import Bot
-
-# Dimension Definitions
-PLATFORM_SIZE = 1000
-
-# Other Definitions
-NAME = "agar.io"
-VERSION = "0.2"
+from src.game import Game
 
 # Pygame initialization
-pygame.init()
-SCREEN = pygame.display.set_mode(flags=pygame.FULLSCREEN)
-SCREEN_WIDTH, SCREEN_HEIGHT = SCREEN.get_width(), SCREEN.get_height()
-pygame.display.set_caption("{} - v{}".format(NAME, VERSION))
-pygame.display.set_icon(pygame.image.load("./assets/logo.png").convert_alpha())
+parser = argparse.ArgumentParser(
+    "pygar.io", description="An agar.io clone made in python with pygame."
+)
 
-cam = Camera(SCREEN_WIDTH,SCREEN_HEIGHT)
-eatable = pygame.sprite.Group()
+parser.add_argument("player_name", default="anon", type=str, help="The player name")
+parser.add_argument("bots", default=3, type=int, help="The number of bots")
 
-grid = Grid(pygame.Color(51,51,51),PLATFORM_SIZE,25,3,cam)
+if len(sys.argv) == 1:
+    parser.print_help(sys.stderr)
+    sys.exit(1)
 
-for _ in range(1000):
-    Food(PLATFORM_SIZE, cam, eatable)
+args = parser.parse_args()
 
-for _ in range(5):
-    Bot(PLATFORM_SIZE,cam, eatable)
+if not any(vars(args).values()):
+    parser.print_help()
+    parser.exit()
 
-player = Player(PLATFORM_SIZE,"anon",cam, eatable)
-hud = Hud(player,cam)
-clock = pygame.time.Clock()
+if not args.__contains__("help"):
+    pygame.init()
+    SCREEN = pygame.display.set_mode(flags=pygame.FULLSCREEN)
+    pygame.display.set_caption("pygar.io")
+    pygame.display.set_icon(pygame.image.load("./assets/logo.png").convert_alpha())
 
-while(True):
-    for e in pygame.event.get():
-        if(e.type == pygame.KEYDOWN):
-            if(e.key == pygame.K_ESCAPE):
-                pygame.quit()
-                quit()
-        if(e.type == pygame.QUIT):
-            pygame.quit()
-            quit()
+    game = Game(SCREEN, args.player_name, 1000, args.bots)
+    game.main()
 
-    cam.surface.fill((22,22,22))
-    cam.custom_draw()
-    cam.update(player)
-
-    SCREEN.blit(cam.surface, cam.surface.get_rect())
-    
-    pygame.display.flip()
-    clock.tick(60)
+pygame.quit()

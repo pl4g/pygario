@@ -1,9 +1,7 @@
 from random import choice, randint
-from pygame import Color, Vector2, gfxdraw, mouse
+from pygame import Color, Vector2, gfxdraw, mouse, font
 from .entity import Entity
 from .camera import Camera
-from . import utils
-
 
 class Player(Entity):
     COLORS = [
@@ -16,10 +14,10 @@ class Player(Entity):
         Color(6, 254, 13),
     ]
 
-    def __init__(self, platform_size,name: str = "anon", *groups) -> None:
+    def __init__(self, platform_size, name: str = "anon", *groups) -> None:
         super().__init__(*groups)
 
-        self.can_eat = groups[1]
+        self.can_eat = groups[0]
 
         self.x = randint(-platform_size, platform_size)
         self.y = randint(-platform_size, platform_size)
@@ -35,9 +33,14 @@ class Player(Entity):
             int(self.color.b * 2 / 3),
         )
         self.name = name
+        self.font = font.Font("./assets/Ubuntu.ttf", 24)
 
     def eat(self, food: Entity, zoom):
-        if not (utils.get_distance(Vector2(self.x, self.y), Vector2(food.x, food.y)) < self.radius - 3 / zoom and self.radius > food.radius):
+        if not (
+            Vector2(self.x, self.y).distance_to(Vector2(food.x, food.y))
+            < self.radius - 3 / zoom
+            and self.radius > food.radius
+        ):
             return
 
         gaining_radius = 1
@@ -51,14 +54,13 @@ class Player(Entity):
         self.score += gaining_score
         food.kill()
 
-    def move(self):
+    def move(self, camera):
         mouse_pos = Vector2(mouse.get_pos())
 
-        _, SCREEN_WIDTH, SCREEN_HEIGHT = utils.get_screen()
-
         direction = Vector2(
-            mouse_pos.x - SCREEN_WIDTH // 2, mouse_pos.y - SCREEN_HEIGHT // 2
+            mouse_pos.x - camera.surface_width // 2, mouse_pos.y - camera.surface_height // 2
         )
+
         magnitude = sum([i**2 for i in direction.xy]) ** 0.5
 
         normal = Vector2(0, 0)
@@ -69,33 +71,33 @@ class Player(Entity):
         self.x += normal.x * self.speed
         self.y += normal.y * self.speed
 
-    def update(self) -> None:
-        self.move()
+    def update(self, camera: Camera) -> None:
 
-        cam = self.get_camera()
-        if cam is None:
-            return
+        # move the player and checks if it can eat the foods or the players
 
-        for e in cam.sprites():
-            if e in self.can_eat.sprites():
-                self.eat(e, cam.zoom)
+        self.move(camera)
+
+        for e in self.can_eat.sprites():
+            can_draw, _ = e.can_draw(camera)
+
+            if not can_draw:
+                continue
+
+            self.eat(e, camera.zoom)
 
     def draw(self, camera: Camera):
+
+        # check if can draw player onto screen
+
+        can_draw, center = self.can_draw(camera)
+
+        if not can_draw: 
+            return
+
         super().draw(camera)
-
         zoom = camera.zoom
-        x, y = camera.x, camera.y
 
-        center = Vector2(int(self.x * zoom + x), int(self.y * zoom + y))
-
-        # Draw the ouline of the player as a darker, bigger circle
-        gfxdraw.aacircle(
-            camera.surface,
-            int(center.x),
-            int(center.y),
-            int((self.radius / 2 + 3 / zoom) * zoom),
-            self.out_color,
-        )
+        # draw player
 
         gfxdraw.filled_circle(
             camera.surface,
@@ -112,3 +114,11 @@ class Player(Entity):
             int(self.radius * zoom),
             self.color,
         )
+        
+        # draw player name
+
+        text = self.font.render(self.name,False, "white")
+        rect = text.get_rect()
+        rect.center = (int(self.x * camera.zoom) + camera.rect.x, int(self.y * camera.zoom) + camera.rect.y)
+
+        camera.surface.blit(text, rect)
