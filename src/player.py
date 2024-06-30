@@ -1,7 +1,8 @@
 from random import choice, randint
-from pygame import Color, Vector2, gfxdraw, mouse, font
+from pygame import Color, Vector2, gfxdraw, mouse, font, mixer
 from .entity import Entity
 from .camera import Camera
+
 
 class Player(Entity):
     COLORS = [
@@ -50,6 +51,11 @@ class Player(Entity):
             gaining_radius = food.radius * 0.75
             gaining_score = food.score / 2
 
+        if type(self) is Player:
+            eat_sound = mixer.Sound("./assets/eat.wav")
+            eat_sound.set_volume(0.5)
+            eat_sound.play()
+
         self.radius += gaining_radius
         self.score += gaining_score
         food.kill()
@@ -58,7 +64,8 @@ class Player(Entity):
         mouse_pos = Vector2(mouse.get_pos())
 
         direction = Vector2(
-            mouse_pos.x - camera.surface_width // 2, mouse_pos.y - camera.surface_height // 2
+            mouse_pos.x - camera.surface_width // 2,
+            mouse_pos.y - camera.surface_height // 2,
         )
 
         magnitude = sum([i**2 for i in direction.xy]) ** 0.5
@@ -72,7 +79,6 @@ class Player(Entity):
         self.y += normal.y * self.speed
 
     def update(self, camera: Camera) -> None:
-
         # move the player and checks if it can eat the foods or the players
 
         self.move(camera)
@@ -86,12 +92,11 @@ class Player(Entity):
             self.eat(e, camera.zoom)
 
     def draw(self, camera: Camera):
-
         # check if can draw player onto screen
 
         can_draw, center = self.can_draw(camera)
 
-        if not can_draw: 
+        if not can_draw:
             return
 
         super().draw(camera)
@@ -114,11 +119,14 @@ class Player(Entity):
             int(self.radius * zoom),
             self.color,
         )
-        
+
         # draw player name
 
-        text = self.font.render(self.name,False, "white")
+        text = self.font.render(self.name, False, "white")
         rect = text.get_rect()
-        rect.center = (int(self.x * camera.zoom) + camera.rect.x, int(self.y * camera.zoom) + camera.rect.y)
+        rect.center = (
+            int(self.x * camera.zoom) + camera.rect.x,
+            int(self.y * camera.zoom) + camera.rect.y,
+        )
 
         camera.surface.blit(text, rect)

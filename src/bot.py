@@ -31,6 +31,7 @@ class Bot(Player):
         "cachorro1337",
         "etherealharmonies",
         "SaturnCSS",
+        "dropcapstyle",
     ]
 
     def __init__(self, platform_size, *groups) -> None:

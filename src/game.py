@@ -15,19 +15,23 @@ class Game:
         platform_size: int = 500,
         bots: int = 3,
     ) -> None:
-
-
-
         eatable = pygame.sprite.Group()
 
         player = Player(platform_size, player_name, eatable)
 
-        self.cam = Camera(screen, player, Grid(pygame.Color(51, 51, 51), platform_size, 50, 3), Hud(player))
-        self.cam.add([Bot(platform_size, eatable) for _ in range(bots)], [Food(platform_size, eatable) for _ in range(1000)])
+        self.cam = Camera(
+            screen,
+            player,
+            Grid(pygame.Color(51, 51, 51), platform_size, 50, 3),
+            Hud(player),
+        )
+        self.cam.add(
+            [Bot(platform_size, eatable) for _ in range(bots)],
+            [Food(platform_size, eatable) for _ in range(1000)],
+        )
         self.cam.sort()
 
         self.clock = pygame.time.Clock()
-        pass
 
     def main(self):
         running = True
@@ -41,5 +45,13 @@ class Game:
             self.cam.update()
             self.cam.custom_draw()
 
+            if not self.cam.player.alive:
+                running = False
+
+                death_sound = pygame.mixer.Sound("./assets/lose.mp3")
+                death_sound.set_volume(0.5)
+                death_sound.play()
+
+                print("You lost :(")
+
             self.clock.tick(60)
-        pass
