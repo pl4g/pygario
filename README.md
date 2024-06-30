@@ -1,7 +1,5 @@
 # pygar.io
 
-Grupo: Vinícius Luciano Cardoso (24100591)
-
 Um clone the [agar.io](https://agar.io/) feito em pygame por mim, servindo como meu trabalho final de INE5402-01208B (20241) - Programação Orientada a Objetos I na Universidade Federal de Santa Catarina.
 
 [read in english](./README.en.md)
